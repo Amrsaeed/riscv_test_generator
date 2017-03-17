@@ -8,6 +8,7 @@ import numpy as np
 import re
 
 
+# Function to reverse a dictionary keys with values
 def reverse_dict_with_iterable(dictionary):
     rev = {}
     for key, value in dictionary.items():
@@ -15,6 +16,7 @@ def reverse_dict_with_iterable(dictionary):
             rev[item] = key
     return rev
 
+# Instructions classified into types
 TYPES_TO_INSTRUCTION = dict(U_TYPE={'LUI', 'AUIPC'}, UJ_TYPE={'JAL'},
                             SB_TYPE={'BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU'},
                             I_TYPE={'JALR', 'LB', 'LH', 'LW', 'LBU', 'LHU', 'ADDI', 'SLTI', 'SLTIU', 'XORI', 'ORI',
@@ -22,7 +24,7 @@ TYPES_TO_INSTRUCTION = dict(U_TYPE={'LUI', 'AUIPC'}, UJ_TYPE={'JAL'},
                                     'SRAI'}, S_TYPE={'SB', 'SH', 'SW'},
                             R_TYPE={'ADD', 'SUB', 'SLL', 'SLT', 'SLTU', 'XOR', 'SRL', 'SRA', 'OR', 'AND', 'MUL', 'MULH',
                                     'MULHSU', 'MULHU', 'DIV', 'DIVU', 'REM', 'REMU'})
-
+# Opcodes of all instructions
 OPCODES = dict(LUI='0110111', AUIPC='0010111', JAL='1101111', JALR='1100111', BEQ='1100011', BNE='1100011',
                BLT='1100011', BGE='1100011', BLTU='1100011', BGEU='1100011', LB='0000011', LH='0000011', LW='0000011',
                LBU='0000011', LHU='0000011', SB='0100011', SH='0100011', SW='0100011', ADDI='0010011', SLTI='0010011',
@@ -31,6 +33,7 @@ OPCODES = dict(LUI='0110111', AUIPC='0010111', JAL='1101111', JALR='1100111', BE
                XOR='0110011', SRL='0110011', SRA='0110011', OR='0110011', AND='0110011', MUL='0110011', MULH='0110011',
                MULHSU='0110011', MULHU='0110011', DIV='0110011', DIVU='0110011', REM='0110011', REMU='0110011')
 
+# Function codes of all instructions that need one
 FUNCT_CODES = dict(JALR='000', BEQ='000', BNE='001', BLT='100', BGE='101', BLTU='110', BGEU='111', LB='000', LH='001',
                    LW='010', LBU='100', LHU='101', SB='000', SH='001', SW='010', ADDI='000', SLTI='010', SLTIU='011',
                    XORI='100', ORI='110', ANDI='111', SLLI='001', SRLI='101', SRAI='101', ADD='000', SUB='000',
@@ -45,27 +48,30 @@ SHIFT_IMMEDIATE_INSTRUCTION_NAMES = {'SLLI', 'SRLI', 'SRAI'}
 
 M_EXTENSION_NAMES = {'MUL', 'MULH', 'MULHSU', 'MULHU', 'DIV', 'DIVU', 'REM', 'REMU'}
 
+# Reversing the instructions table to correlate each instruction with its type directly
 INSTRUCTION_TO_TYPE = reverse_dict_with_iterable(TYPES_TO_INSTRUCTION)
 
 TEST_CASES_NUMBER = 0
 
-
+# Converting a 32 bit binary string instruction to a hexadecimal one
 def convert_to_hex(binary_instruction):
     # return hex(int(binary_instruction[::-1], 2))[2:]
     return format(int(binary_instruction, 2), '08x')
 
 
+# Appending Instruction in corresponding lists
 def add_instructions(binary, assembly, hex):
     Instructions_list_binary.append(binary)
     instructions_list_assembly.append(assembly)
     instructions_list_hex.append(hex)
 
-
+# Function to generate an R-Type instruction
 def generate_r(name):
     # print('Generating R')
     opcode_instruction = OPCODES[name]
     func_instruction = FUNCT_CODES[name]
 
+    # Choosing func7 code
     if name == 'SUB' or name == 'SRA':
         func7_instruction = '0100000'
     elif name in M_EXTENSION_NAMES:
@@ -85,7 +91,7 @@ def generate_r(name):
 
     add_instructions(instruction_binary, instruction_assembly, convert_to_hex(instruction_binary))
 
-
+# Function to generate an I-Type instruction
 def generate_i(name):
     # print('Generating I')
     opcode_instruction = OPCODES[name]
@@ -95,6 +101,7 @@ def generate_i(name):
     rd_decimal = random.choice(REGISTERS_TO_USE)
     rd_binary = "{0:05b}".format(rd_decimal)
 
+    # Special cases for shift and load instructions
     if name in SHIFT_IMMEDIATE_INSTRUCTION_NAMES:
         if name == 'SRAI':
             imm = '0100000'
@@ -106,7 +113,7 @@ def generate_i(name):
         instruction_binary = imm + shamt_binary + rs1_binary + func_instruction + rd_binary + opcode_instruction
         instruction_assembly = format(name, '10s') + "\tx" + str(rd_decimal) + ", x" + str(rs1_decimal) + ", " + str(shamt_decimal)
     elif name in LOAD_INSTRUCTION_NAMES:
-        imm_decimal = random.choice(STORED_MEMORY_LOCATIONS)
+        imm_decimal = random.choice(STORED_MEMORY_LOCATIONS) # Choose from stored in locations
         imm_binary = "{0:012b}".format(imm_decimal)
         instruction_binary = imm_binary + rs1_binary + func_instruction + rd_binary + opcode_instruction
         instruction_assembly = format(name, '10s') + "\tx" + str(rd_decimal) + ", x" + str(rs1_decimal) + ", " + str(imm_decimal)
@@ -118,7 +125,7 @@ def generate_i(name):
 
     add_instructions(instruction_binary, instruction_assembly, convert_to_hex(instruction_binary))
 
-
+# Function to generate an S-Type instruction
 def generate_s(name):
     # print('Generating S')
     opcode_instruction = OPCODES[name]
@@ -130,6 +137,7 @@ def generate_s(name):
     imm_decimal = 2*np.random.randint(0, 2047)
     imm_binary = "{0:012b}".format(imm_decimal)
 
+    # Add address to locations to load from list
     STORED_MEMORY_LOCATIONS.append(imm_decimal)
 
     instruction_binary = imm_binary[5:12] + rs2_binary + rs1_binary + func_instruction + imm_binary[0:5] + opcode_instruction
@@ -137,7 +145,7 @@ def generate_s(name):
 
     add_instructions(instruction_binary, instruction_assembly, convert_to_hex(instruction_binary))
 
-
+# Function to generate an SB-Type instruction
 def generate_sb(name):
     # print('Generating SB')
     opcode_instruction = OPCODES[name]
@@ -149,6 +157,7 @@ def generate_sb(name):
 
     imm_decimal = INSTRUCTION_CURRENT * 4
 
+    # If immediate address is current one, regenerate another.
     while imm_decimal == INSTRUCTION_CURRENT * 4:
         imm_decimal = 2 * np.random.randint(0, Instructions_Number * 2)
 
@@ -159,7 +168,7 @@ def generate_sb(name):
 
     add_instructions(instruction_binary, instruction_assembly, convert_to_hex(instruction_binary))
 
-
+# Function to generate a U-Type instruction
 def generate_u(name):
     # print('Generating U')
     opcode_instruction = OPCODES[name]
@@ -173,7 +182,7 @@ def generate_u(name):
 
     add_instructions(instruction_binary, instruction_assembly, convert_to_hex(instruction_binary))
 
-
+# Function to generate an UJ-Type instruction
 def generate_uj(name):
     # print('Generating UJ')
     opcode_instruction = OPCODES[name]
@@ -181,6 +190,7 @@ def generate_uj(name):
     rd_binary = "{0:05b}".format(rd_decimal)
     imm_decimal = INSTRUCTION_CURRENT*4
 
+    # If address is current one, regenerate another.
     while imm_decimal == INSTRUCTION_CURRENT*4:
         imm_decimal = 2 * np.random.randint(0, Instructions_Number*2)
 
@@ -191,9 +201,8 @@ def generate_uj(name):
 
     add_instructions(instruction_binary, instruction_assembly, convert_to_hex(instruction_binary))
 
-
+# Instruction generation wrapper
 def generate_instruction(name):
-
     if INSTRUCTION_TO_TYPE[name] == 'R_TYPE':
         generate_r(name)
     elif INSTRUCTION_TO_TYPE[name] == 'I_TYPE':
@@ -207,11 +216,12 @@ def generate_instruction(name):
     elif INSTRUCTION_TO_TYPE[name] == 'UJ_TYPE':
         generate_uj(name)
 
-
+# Validaing Input
 while int(TEST_CASES_NUMBER) < 1:
     TEST_CASES_NUMBER = input('Enter Number of test cases to produce: ')
 
 for test_case in range(int(TEST_CASES_NUMBER)):
+    # Initializing all variables
     REGISTERS_NUMBER = 0
     Instructions_Number = 0
     INSTRUCTION_CURRENT = 0
@@ -220,24 +230,29 @@ for test_case in range(int(TEST_CASES_NUMBER)):
     instructions_list_assembly = []
     instructions_list_hex = []
 
+    # Recieving and validaing inputs
     while int(Instructions_Number) < 1:
         Instructions_Number = input('Enter Number of Instructions to produce: ')
 
     while int(REGISTERS_NUMBER) < 1 or int(REGISTERS_NUMBER) > 32:
         REGISTERS_NUMBER = input('Enter Number of Registers to use(1 to 32) : ')
 
+    # Random Registers to use
     REGISTERS_TO_USE = np.random.randint(1, 32, int(REGISTERS_NUMBER))
     Instructions_Number = int(Instructions_Number)
 
+    # Generating instructions
     for instruction in range(Instructions_Number):
         INSTRUCTION_CURRENT = instruction
         instruction_name = random.choice(list(INSTRUCTION_TO_TYPE.keys()))
 
+        # Check for load instruction with no prior store
         while instruction_name in LOAD_INSTRUCTION_NAMES and len(STORED_MEMORY_LOCATIONS) == 0:
             instruction_name = random.choice(list(INSTRUCTION_TO_TYPE.keys()))
 
         generate_instruction(instruction_name)
 
+    # Writing and formatting ouput files
     binary_file = open("binary" + str(test_case+1) + ".txt", "w")
     assembly_file = open("assembly" + str(test_case+1) + ".s", "w")
     hex_file = open("hex" + str(test_case+1) + ".v", "w")
@@ -257,4 +272,5 @@ for test_case in range(int(TEST_CASES_NUMBER)):
     binary_file.close()
     assembly_file.close()
     hex_file.close()
+
     print("FINISHED TEST CASE " + str(test_case+1))
