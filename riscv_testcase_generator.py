@@ -119,11 +119,13 @@ def generate_i(name):
         instruction_assembly = format(name, '10s') + "\tx" + str(rd_decimal) + ", x" + str(rs1_decimal) + ", " + str(
             shamt_decimal)
     elif name in LOAD_INSTRUCTION_NAMES:
+        rs1_decimal = 0
+        rs1_binary = "{0:05b}".format(rs1_decimal)
         imm_decimal = random.choice(STORED_MEMORY_LOCATIONS)  # Choose from stored in locations
         imm_binary = "{0:012b}".format(imm_decimal)
         instruction_binary = imm_binary + rs1_binary + func_instruction + rd_binary + opcode_instruction
-        instruction_assembly = format(name, '10s') + "\tx" + str(rd_decimal) + ", x" + str(rs1_decimal) + ", " + str(
-            imm_decimal)
+        instruction_assembly = format(name, '10s') + "\tx" + str(rd_decimal) + ", " + str(imm_decimal) + "(x" \
+            + str(rs1_decimal) + ")"
     else:
         imm_decimal = np.random.randint(0, 4095)
         imm_binary = "{0:012b}".format(imm_decimal)
@@ -139,7 +141,7 @@ def generate_s(name):
     # print('Generating S')
     opcode_instruction = OPCODES[name]
     func_instruction = FUNCT_CODES[name]
-    rs1_decimal = random.choice(REGISTERS_TO_USE)
+    rs1_decimal = 0
     rs1_binary = "{0:05b}".format(rs1_decimal)
     rs2_decimal = random.choice(REGISTERS_TO_USE)
     rs2_binary = "{0:05b}".format(rs2_decimal)
@@ -151,10 +153,8 @@ def generate_s(name):
 
     instruction_binary = imm_binary[0:7] + rs2_binary + rs1_binary + func_instruction + imm_binary[
                                                                                          7:] + opcode_instruction
-    instruction_assembly = format(name, '10s') + "\tx" + str(rs2_decimal) + ", x" + str(rs2_decimal) + ", " + str(
-        imm_decimal)
     instruction_assembly = format(name, '10s') + "\tx" + str(rs2_decimal) + ", " + str(imm_decimal) + "(x" \
-                           + str(rs1_decimal) + ")"
+        + str(rs1_decimal) + ")"
     add_instructions(instruction_binary, instruction_assembly, convert_to_hex(instruction_binary))
 
 
