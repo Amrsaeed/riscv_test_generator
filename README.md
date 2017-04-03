@@ -1,4 +1,4 @@
-# riscv_test_generator
+# RiscV32ISA Random Test cases Generator
 A random instruction generator for the RISCV architecture for testing purposes
 
 The script receives as input the number of test cases to produce, number of instructions per test case, and number of registers to randomly choose from.
